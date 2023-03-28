@@ -1,0 +1,55 @@
+```{r}
+library(tidyverse)
+```
+
+```{r}
+(data <- read_csv('food_nutrient_data.csv'))
+```
+
+```{r}
+pivot_wider(data, names_from = c(nutrient_name, nutrient_unit), values_from = nutrient_amount, id_cols = c(food_name), names_sep = '_')
+```
+need to limit data to only the nutrients that appear the most often.. which are?
+
+```{r}
+data %>%
+  group_by(nutrient_name) %>%
+  summarize(count=n()) %>%
+  arrange(desc(count))
+```
+
+
+```{r}
+most_freq <- data %>%
+  group_by(nutrient_name) %>%
+  summarize(count=n()) %>%
+  arrange(desc(count)) %>%
+  filter(count > 90)
+most_freq$nutrient_name
+```
+
+```{r}
+clean_data <- data %>%
+  filter(nutrient_name %in% most_freq$nutrient_name) %>%
+  pivot_wider(names_from = c(nutrient_name, nutrient_unit), values_from = nutrient_amount, id_cols = c(food_name), names_sep = ', ') %>%
+  replace(is.na(.), 0)
+```
+
+```{r}
+write_csv(clean_data, file = "clean_nutrient_data.csv")
+```
+
+```{r}
+clean_data
+```
+
+```{r}
+energy_data <- clean_data %>% filter(`Energy, kcal` > 0)
+```
+
+
+```{r}
+lm(`Energy, kcal` ~ `Carbohydrate, by difference, g`, energy_data)
+```
+
+

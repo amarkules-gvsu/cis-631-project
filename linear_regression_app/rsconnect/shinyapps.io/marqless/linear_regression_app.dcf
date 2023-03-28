@@ -1,0 +1,11 @@
+name: linear_regression_app
+title:
+username:
+account: marqless
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8658603
+bundleId: 7000280
+url: https://marqless.shinyapps.io/linear_regression_app/
+when: 1679614377.38325
+lastSyncTime: 1679614377.38326

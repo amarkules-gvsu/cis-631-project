@@ -1,0 +1,120 @@
+# Data Formatting
+
+## linear Regression Data
+
+Read in required files:
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(GGally)
+food <- read_csv("food.csv")
+food_nutrient <- read_csv("food_nutrient.csv")
+nutrient <- read_csv("nutrient.csv")
+food_category <- read_csv("food_category.csv")
+food_portion <- read_csv("food_portion.csv")
+```
+
+```{r}
+food_portion <- food_portion %>% group_by(fdc_id) %>% summarize(portion_size_grams=mean(gram_weight, na.rm=TRUE))
+```
+
+
+
+
+
+merge food, food nutrient,  and nutrient - save for use in both final datasets
+
+```{r}
+full_joined_data <- food_nutrient %>% 
+  inner_join(y=nutrient, by=c("nutrient_id" = "id")) %>%
+  rename(nutrient_name = name, nutrient_unit_name = unit_name, nutrient_amount = amount) %>%
+  select(fdc_id, nutrient_amount, nutrient_name, nutrient_unit_name) %>%
+  inner_join(food, by = c("fdc_id")) %>%
+  rename(food_name = description) %>%
+  select(fdc_id, nutrient_amount, nutrient_name, nutrient_unit_name, food_name, food_category_id) %>%
+  inner_join(food_category, by = c("food_category_id" = "id")) %>%
+  rename(food_category_name = description) %>%
+  select(fdc_id, nutrient_amount, nutrient_name, nutrient_unit_name, food_name, food_category_id, food_category_name) %>%
+  inner_join(food_portion, by=c("fdc_id"))
+```
+
+write to CSV for later
+```{r}
+write_csv(full_joined_data, file = "full_joined_food_nutrient_data.csv")
+```
+
+filter to linear regression data only
+```{r}
+full_joined_data %>%
+  group_by(nutrient_name, nutrient_unit_name) %>%
+  summarize(count=n()) %>%
+  arrange(desc(nutrient_name))
+```
+
+nutrients we want: "Total lipid (fat)", "Fiber, total dietary", "Protein", "Glucose", "Fructose", "Fatty acids, total monounsaturated", "Fatty acids, total saturated", "Fatty acids, total polyunsaturated", "Fatty acids, total trans", "Energy", "Carbohydrate, by difference"
+
+```{r}
+linreg_data <- full_joined_data %>%
+  filter(nutrient_name %in% c("Total lipid (fat)", "Fiber, total dietary", "Protein", "Glucose", "Fructose", "Fatty acids, total monounsaturated", "Fatty acids, total saturated", "Fatty acids, total polyunsaturated", "Fatty acids, total trans", "Energy", "Carbohydrate, by difference"))
+```
+
+```{r}
+linreg_data <- linreg_data %>%
+  filter(nutrient_unit_name != "kJ") %>%
+  pivot_wider(names_from = c(nutrient_name, nutrient_unit_name), values_from = nutrient_amount, id_cols = c(fdc_id, food_name, portion_size_grams), names_sep = ', ') %>%
+  replace(is.na(.), 0) %>%
+  mutate(saturated_fat_g = `Fatty acids, total saturated, G`, 
+         glucose_g = `Glucose, G`,
+         fructose_g = `Fructose, G`,
+         energy_kcal = `Energy, KCAL`,
+         monounsaturated_fat_g = `Fatty acids, total monounsaturated, G`,
+         dietary_fiber_g = `Fiber, total dietary, G`,
+         protein_g = `Protein, G`,
+         polyunsaturted_fat_g = `Fatty acids, total polyunsaturated, G`,
+         fat_g = `Total lipid (fat), G`,
+         trans_fat_g = `Fatty acids, total trans, G`,
+         carbs_g = `Carbohydrate, by difference, G`) 
+
+```
+
+```{r}
+linreg_data <- linreg_data %>% mutate(`Portion Size, G`=portion_size_grams)
+```
+
+
+
+```{r}
+write_csv(linreg_data, "linear_regression_app/linear_regression_data.csv")
+```
+
+```{r}
+full_joined_data
+```
+
+produce a linreg model with the data you want to show in the app... What details should be in the app?
+- correlations between IVs and DV using ggpairs
+- Linear regression formula
+- Fit statistic table - R2, p-val, AIC
+- LINE assumption checking plots - Residual plot for Linearity and Eq of Variance, residual histogram for normality
+```{r}
+linreg_data
+```
+
+```{r}
+model <- lm(`Energy, KCAL` ~ `Protein, G` + `Total lipid (fat), G`, data=linreg_data)
+tidy(model)
+glance(model)
+model_aug <- augment(model)
+
+ggplot(data = model_aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+
+ggplot(data = model_aug, aes(x = .resid)) +
+  geom_histogram() +
+  xlab("Residuals")
+```
+

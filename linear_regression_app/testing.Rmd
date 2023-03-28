@@ -1,0 +1,75 @@
+```{r}
+library(shiny)
+library(tidyverse)
+library(GGally)
+
+# To Do
+#   Add correlations and such for variable selection
+#   Add formula for linear model based on selected variables - for week 1
+#   Add fit statistics
+#   Add assumption checking
+#   Add help dialog
+#   Deploy!
+
+data <- read_csv("linear_regression_data.csv")
+```
+
+```{r}
+cols <- c("Fatty acids, total saturated, G",
+                           "Glucose, G")
+cols <- append(cols,c("Energy, KCAL"))
+data %>%
+  select(all_of(cols)) %>% 
+  ggpairs()
+```
+
+```{r}
+# add transforms to dataset - too hard to calculate dynamically
+
+data <- data %>% mutate(
+  `Squared Fatty acids, total saturated, G` = `Fatty acids, total saturated, G` * `Fatty acids, total saturated, G`,
+  `Log Fatty acids, total saturated, G` = log(`Fatty acids, total saturated, G`),
+  `Square Root Fatty acids, total saturated, G` = sqrt(`Fatty acids, total saturated, G`),
+  
+  `Squared Glucose, G` = `Glucose, G` * `Glucose, G`,
+  `Log Glucose, G` = log(`Glucose, G`),
+  `Square Root Glucose, G` = sqrt(`Glucose, G`),
+  
+  `Squared Fructose, G` = `Fructose, G` * `Fructose, G`,
+  `Log Fructose, G` = log(`Fructose, G`),
+  `Square Root Fructose, G` = sqrt(`Fructose, G`),
+  
+  `Squared Fatty acids, total monounsaturated, G` = `Fatty acids, total monounsaturated, G` * `Fatty acids, total monounsaturated, G`,
+  `Log Fatty acids, total monounsaturated, G` = log(`Fatty acids, total monounsaturated, G`),
+  `Square Root Fatty acids, total monounsaturated, G` = sqrt(`Fatty acids, total monounsaturated, G`),
+  
+  `Squared Fiber, total dietary, G` = `Fiber, total dietary, G` * `Fiber, total dietary, G`,
+  `Log Fiber, total dietary, G` = log(`Fiber, total dietary, G`),
+  `Square Root Fiber, total dietary, G` = sqrt(`Fiber, total dietary, G`)
+  ,
+  `Squared Protein, G` = `Protein, G` * `Protein, G`,
+  `Log Protein, G` = log(`Protein, G`),
+  `Square Root Protein, G` = sqrt(`Protein, G`)
+  ,
+  `Squared Fatty acids, total polyunsaturated, G` = `Fatty acids, total polyunsaturated, G` * `Fatty acids, total polyunsaturated, G`,
+  `Log Fatty acids, total polyunsaturated, G` = log(`Fatty acids, total polyunsaturated, G`),
+  `Square Root Fatty acids, total polyunsaturated, G` = sqrt(`Fatty acids, total polyunsaturated, G`)
+  ,
+  `Squared Total lipid (fat), G` = `Total lipid (fat), G` * `Total lipid (fat), G`,
+  `Log Total lipid (fat), G` = log(`Total lipid (fat), G`),
+  `Square Root Total lipid (fat), G` = sqrt(`Total lipid (fat), G`)
+  ,
+  `Squared Fatty acids, total trans, G` = `Fatty acids, total trans, G` * `Fatty acids, total trans, G`,
+  `Log Fatty acids, total trans, G` = log(`Fatty acids, total trans, G`),
+  `Square Root Fatty acids, total trans, G` = sqrt(`Fatty acids, total trans, G`)
+  ,
+  `Squared Carbohydrate, by difference, G` = `Carbohydrate, by difference, G` * `Carbohydrate, by difference, G`,
+  `Log Carbohydrate, by difference, G` = log(`Fatty acids, total trans, G`),
+  `Square Root Carbohydrate, by difference, G` = sqrt(`Fatty acids, total trans, G`)
+)
+```
+
+```{r}
+write_csv(data, "linear_regression_data.csv")
+```
+
