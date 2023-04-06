@@ -1,0 +1,7 @@
+1. Make sure data is in a good format for analysis
+2. add side panel to select categories to include
+3. Add dropdowns for selecting IVs - maybe max of 2 so that the data can be displayed graphically
+4. Variable selection tools - how do the IVs differ across categories
+5. Model building - plot distributions and show formula (maybe, if there's a clean way to represent that)
+6. Model assessment - precision and recall, anything else to include here?
+7. Assumption checking... not strictly required but nice to have
