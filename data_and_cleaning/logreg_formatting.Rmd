@@ -1,0 +1,47 @@
+```{r}
+library(tidyverse)
+```
+
+```{r}
+full_data <- read_csv("full_joined_food_nutrient_data.csv")
+```
+
+```{r}
+full_data %>%
+  group_by(nutrient_name) %>%
+  summarize(count=n()) %>%
+  arrange(desc(count))
+```
+
+```{r}
+top_vitamins <- c("Calcium, Ca", "Copper, Cu", "Iron, Fe", "Magnesium, Mg", 
+                  "Manganese, Mn", "Phosphorus, P", "Potassium, K", "Zinc, Zn",
+                  "Sodium, Na", "Nitrogen", "Niacin", "Riboflavin", "Vitamin B-6",
+                  "Selenium, Se", "Thiamin")
+```
+
+```{r}
+full_data %>%
+  filter(nutrient_name %in% top_vitamins) %>%
+  group_by(nutrient_name, nutrient_unit_name) %>%
+  summarize(count=n()) %>%
+  arrange(nutrient_name)
+# no nutrients tracked in multiple units, we love to see it
+```
+
+```{r}
+main_nute_data <- full_data %>%
+  filter(nutrient_name %in% top_vitamins)
+```
+
+```{r}
+main_nute_data %>%
+  pivot_wider(names_from = c(nutrient_name, nutrient_unit_name), values_from = nutrient_amount, id_cols = c(fdc_id, food_name, food_category_name), names_sep = ', ') %>%
+  replace(is.na(.), 0) %>%
+  group_by(food_category_name) %>%
+  summarize(count=n())
+```
+
+
+
+
