@@ -3,10 +3,6 @@ library(tidyverse)
 library(tidymodels)
 library(GGally)
 
-# To Do
-#   Add assumption checking - linearity
-#   Add help dialog
-#   Deploy!
 
 data <- read_csv("linear_regression_data.csv")
 

@@ -1,0 +1,16 @@
+```{r}
+library(tidyverse)
+```
+
+```{r}
+data <- read_csv("logreg_data.csv")
+```
+
+```{r}
+data %>% 
+  filter(food_category_name %in% c("Dairy and Egg Products", "Fruits and Fruit Juices")) %>%
+  ggplot() +
+  aes(x=.data[["Magnesium, Mg, MG"]], color=food_category_name)+
+  geom_density(adjust=4)
+```
+

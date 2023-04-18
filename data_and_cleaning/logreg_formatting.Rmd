@@ -35,13 +35,14 @@ main_nute_data <- full_data %>%
 ```
 
 ```{r}
-main_nute_data %>%
+main_nute_data <- main_nute_data %>%
   pivot_wider(names_from = c(nutrient_name, nutrient_unit_name), values_from = nutrient_amount, id_cols = c(fdc_id, food_name, food_category_name), names_sep = ', ') %>%
-  replace(is.na(.), 0) %>%
-  group_by(food_category_name) %>%
-  summarize(count=n())
+  replace(is.na(.), 0)
 ```
 
 
+```{r}
+write_csv(main_nute_data, "logreg_data.csv")
+```
 
 
