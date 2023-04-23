@@ -99,10 +99,38 @@ ui <- fluidPage(
       
     ),
     mainPanel(
+      h3("Model Selection"),
+      p("This app is designed to help you explore logistic regression. It uses a 
+        dataset containing information about the vitamin and mineral content of 
+        different foods. To start, select a food category that you'd like to 
+        compare against the rest. After that, select up to three vitamins and 
+        minerals you would like to explore. As you make selections, density 
+        curves will appear below. These density curves show how the vitamin or 
+        mineral content for the selected category compares to the rest of the 
+        food categories. To determine whether a vitamin is a good option for 
+        differentiating between your selected category and the rest of them, 
+        compare the 2 lines on each density curve. If it looks like the 
+        distributions are significantly different, that's a good sign that the 
+        vitamin or mineral is a good choice for a logistic regression model to 
+        differentiate the selected food group."),
       plotOutput(outputId="densityCurve1"),
       plotOutput(outputId="densityCurve2"),
       plotOutput(outputId="densityCurve3"),
-      tableOutput(outputId = "modelTable")
+      h3("Model Interpretation"),
+      p("With a food category and vitamins selected, the below table will show 
+        a logistic regression formula. The estimates column shows the x 
+        intercept and coefficients for each term in the formula. For a given 
+        food, if you multiply the coefficient for each term by the amount of 
+        that vitamin or mineral in a serving of the food, then add those values 
+        together with the intercept, the resulting value will be a LOGIT value.
+        The LOGIT is the log of the odds that the food belongs to the category 
+        you selected. To convert from the LOGIT value to a probability, type 
+        some numeric values into the input boxes below the table."),
+      tableOutput(outputId = "modelTable"),
+      conditionalPanel(condition = "input.vitamin1 != 'None'", uiOutput("numberBox1")),
+      conditionalPanel(condition = "input.vitamin2 != 'None'", uiOutput("numberBox2")),
+      conditionalPanel(condition = "input.vitamin3 != 'None'", uiOutput("numberBox3")),
+      conditionalPanel(condition = "output.modelTable", uiOutput("probs"))
     )
   )
 )
@@ -139,7 +167,7 @@ server <- function(input, output) {
              title(main=paste(input$vitamin3, "Distribution for", input$food_category, "vs. Others")))
   })
   
-  output$modelTable <- renderTable({
+  tbl <- reactive({
     cols <- c(input$food_category)
     if(input$vitamin1 != "None"){cols <- append(cols, input$vitamin1)}
     if(input$vitamin2 != "None"){cols <- append(cols, input$vitamin2)}
@@ -151,6 +179,47 @@ server <- function(input, output) {
       set_engine("glm") %>%
       fit(as.formula(paste("`",input$food_category, "` ~ .", sep="")), data = reqd_data, family = "binomial") %>%
       tidy()
+  })
+  
+  output$modelTable <- renderTable({
+    tbl()
+  })
+  
+  output$numberBox1 <- renderUI({
+    numericInput("val1", input$vitamin1, 0)
+  })
+  
+  output$numberBox2 <- renderUI({
+    numericInput("val2", input$vitamin2, 0)
+  })
+  
+  output$numberBox3 <- renderUI({
+    numericInput("val3", input$vitamin3, 0)
+  })
+  
+  output$probs <- renderUI({
+    table <- tbl()
+    intercept <- as.numeric(table[['estimate']][1])
+    logit <- intercept
+    idx <- 1
+    if(input$vitamin1 != 'None'){
+      logit <- logit + (as.numeric(input$val1) * as.numeric(table[['estimate']][1 + idx]))
+      idx <- idx + 1
+    }
+    if(input$vitamin2 != 'None'){
+      logit <- logit + (as.numeric(input$val2) * as.numeric(table[['estimate']][1 + idx]))
+      idx <- idx + 1
+    }
+    if(input$vitamin3 != 'None'){
+      logit <- logit + (as.numeric(input$val3) * as.numeric(table[['estimate']][1 + idx]))
+    }
+    odds <- round(exp(logit), digits=6)
+    prob <- round((odds / (1 + odds)) * 100, digits=4)
+    div(
+      p(paste('Logit Value:', logit)),
+      p(paste('Odds a Food with the above values is in', input$food_category, ":", odds, "to 1")),
+      p(paste('Probability a Food with the above values is in', input$food_category, ":", prob, "%"))
+    )
   })
   
 }
